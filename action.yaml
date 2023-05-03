@@ -1,0 +1,71 @@
+name: container deploy parent
+
+inputs:
+  repository:
+    description: ""
+  workload_identity_provider:
+    description: ""
+  service_account:
+    description: ""
+  projectid:
+    description: ""
+  gar_region:
+    description: ""
+  gke_cluster:
+    description: ""
+  job_folder_location:
+    description: ""
+  gke_zone:
+    description: ""
+  container_repository:
+    description: ""
+  image_name:
+    description: ""
+  
+  
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        repository: ${{ inputs.repository }}
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        token_format: 'access_token'
+        workload_identity_provider: 'projects/485847302094/locations/global/workloadIdentityPools/githubpool/providers/githubprovider'
+        service_account: 'githubsa@ss-host-p-ac91.iam.gserviceaccount.com'
+
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
+    
+
+    - name: Docker configuration
+      shell: sh
+      run: |-
+        echo ${{steps.auth.outputs.access_token}} | docker login -u oauth2accesstoken --password-stdin https://${{ inputs.gar_region }}-docker.pkg.dev
+      
+    - name: Set up GKE credentials
+      uses: google-github-actions/get-gke-credentials@v0
+      with:
+        cluster_name: ${{ inputs.gke_cluster }}
+        location: ${{ inputs.gke_zone }}
+    # Build the Docker image
+    - name: Build app image
+      shell: sh
+      run: |-
+        docker build \
+          --tag "${{ inputs.gar_region }}-docker.pkg.dev/${{ inputs.projectid }}/${{ inputs.container_repository }}/${{ inputs.image_name }}:$GITHUB_SHA" \
+          --build-arg GITHUB_SHA="$GITHUB_SHA" \
+          --build-arg GITHUB_REF="$GITHUB_REF" \
+          ./containers/${{ inputs.job_folder_location }}
+    # Push the Docker image to Google Artifact Registry
+    - name: Publish app image
+      shell: sh
+      run: |-
+        docker push "${{ inputs.gar_region }}-docker.pkg.dev/${{ inputs.projectid }}/${{ inputs.container_repository }}/${{ inputs.image_name }}:$GITHUB_SHA"
+    
+    
+    
