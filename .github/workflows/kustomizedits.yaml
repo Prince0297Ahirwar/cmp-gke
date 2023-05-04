@@ -24,6 +24,9 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
       - name: checkout to repo
         uses: actions/checkout@v3
@@ -40,7 +43,7 @@ jobs:
           echo "updating from ${{ inputs.image }} to ${{ inputs.image-update }}"
           cd ${{ inputs.path }}
           kustomize edit set image ${{ inputs.image }}=${{ inputs.image-update }}
-          cat kustomiztion.yaml
+          cat kustomization.yaml
          
       - name: commit files
         run: |-
