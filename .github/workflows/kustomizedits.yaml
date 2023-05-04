@@ -1,5 +1,7 @@
 name: updation of image
 
+
+
 on:
   workflow_dispatch:
     inputs:
@@ -11,7 +13,6 @@ on:
         description: the image to update
       image-update:
         description: new image
-
 env:
   GAR_LOCATION: asia-east1 
   GKE_CLUSTER: gke-cluster-standard
@@ -29,20 +30,20 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
       # Configure Workload Identity Federation and generate an access token.
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v0'
-        with:
-          token_format: 'access_token'
-          workload_identity_provider: 'projects/485847302094/locations/global/workloadIdentityPools/githubpool/providers/githubprovider'
-          service_account: 'githubsa@ss-host-p-ac91.iam.gserviceaccount.com'
+      # - id: 'auth'
+      #   name: 'Authenticate to Google Cloud'
+      #   uses: 'google-github-actions/auth@v0'
+      #   with:
+      #     token_format: 'access_token'
+      #     workload_identity_provider: 'projects/485847302094/locations/global/workloadIdentityPools/githubpool/providers/githubprovider'
+      #     service_account: 'githubsa@ss-host-p-ac91.iam.gserviceaccount.com'
       
       # Get the GKE credentials so we can deploy to the cluster
-      - name: Set up GKE credentials
-        uses: google-github-actions/get-gke-credentials@v0
-        with:
-          cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.GKE_ZONE }}
+      # - name: Set up GKE credentials
+      #   uses: google-github-actions/get-gke-credentials@v0
+      #   with:
+      #     cluster_name: ${{ env.GKE_CLUSTER }}
+      #     location: ${{ env.GKE_ZONE }}
       
       - name: Set up Kustomize
         run: |-
@@ -55,7 +56,7 @@ jobs:
           cd ${{ inputs.path }}
           kustomize edit set image ${{ inputs.image }}=${{ inputs.image-update }}
           cat kustomiztion.yaml
-          ./kustomize build . | kubectl apply -f -
+         
       - name: commit files
         run: |-
           echo "commit changes"
