@@ -68,4 +68,7 @@ runs:
         docker push "${{ inputs.gar_region }}-docker.pkg.dev/${{ inputs.projectid }}/${{ inputs.container_repository }}/${{ inputs.image_name }}:$GITHUB_SHA"
     
     
-    
+    - name: call kustomizedits
+      shell: sh
+      run: gh workflow run kustomizedits.yaml -R Prince0297Ahirwar/cmp-gke --ref main -f branch=main -f path="${{ inputs.job_folder_location }}/dev" -f image="LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY/IMAGE_APP:TAG" -f image-update="${{ inputs.gar_region }}-docker.pkg.dev/${{ inputs.projectid }}/${{ inputs.container_repository }}/${{ inputs.image_name }}:$GITHUB_SHA"
+      

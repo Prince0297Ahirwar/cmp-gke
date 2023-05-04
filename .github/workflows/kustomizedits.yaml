@@ -1,0 +1,66 @@
+name: updation of image
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: github branch
+      path:
+        description: kustomize run path
+      image:
+        description: the image to update
+      image-update:
+        description: new image
+
+env:
+  GAR_LOCATION: asia-east1 
+  GKE_CLUSTER: gke-cluster-standard
+  GKE_ZONE: asia-east1-a
+  DEPLOYMENT_NAME_APP:  prometheus-example-app # TODO: update to deployment name
+  REPOSITORY:  container-repo 
+  IMAGE_APP: appapp
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout to repo
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.branch }}
+      # Configure Workload Identity Federation and generate an access token.
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: 'projects/485847302094/locations/global/workloadIdentityPools/githubpool/providers/githubprovider'
+          service_account: 'githubsa@ss-host-p-ac91.iam.gserviceaccount.com'
+      
+      # Get the GKE credentials so we can deploy to the cluster
+      - name: Set up GKE credentials
+        uses: google-github-actions/get-gke-credentials@v0
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+      
+      - name: Set up Kustomize
+        run: |-
+          curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
+          chmod u+x ./kustomize
+      
+      - name: update image tag and deploy
+        run: |-
+          echo "updating from ${{ inputs.image }} to ${{ inputs.image-update }}"
+          cd ${{ inputs.path }}
+          kustomize edit set image ${{ inputs.image }}=${{ inputs.image-update }}
+          cat kustomiztion.yaml
+          ./kustomize build . | kubectl apply -f -
+      - name: commit files
+        run: |-
+          echo "commit changes"
+          git config --local user.email "princeahirwar51@gmail.com"
+          git config --local user.name "Prince0297Ahirwar"
+          git commit -am "image update by kustomize"
+          echo "push changes"
+          git push
