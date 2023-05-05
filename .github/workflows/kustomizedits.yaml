@@ -56,7 +56,7 @@ jobs:
           cd ${{ inputs.path }}
           kustomize edit set image ${{ inputs.image }}=${{ inputs.image-update }}
           cat kustomization.yaml
-          ./kustomize build . | kubectl apply -f -
+          kustomize build . | kubectl apply -f -
 
           
          
