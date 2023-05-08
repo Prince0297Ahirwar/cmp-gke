@@ -57,6 +57,9 @@ jobs:
           kustomize edit set image ${{ inputs.image }}=${{ inputs.image-update }}
           cat kustomization.yaml
           kustomize build . | kubectl apply -f -
+          kubectl rollout status deployment/apple-app
+          kubectl get services -o wide
+
 
           
          
